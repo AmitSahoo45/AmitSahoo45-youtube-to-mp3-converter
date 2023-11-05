@@ -1,7 +1,8 @@
 'use client'
 
-import axios from 'axios'
 import { useState } from 'react'
+import axios from 'axios'
+import getVideoId from 'get-video-id';
 import { toast, Toaster } from 'react-hot-toast'
 
 const FilerHandler = () => {
@@ -15,8 +16,10 @@ const FilerHandler = () => {
             return
         }
 
+        const { id } = getVideoId(text)
+
         toast.promise(
-            axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${text}`, {
+            axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${id}`, {
                 'headers': {
                     'x-rapidapi-key': process.env.NEXT_PUBLIC_API_KEY,
                     'x-rapidapi-host': process.env.NEXT_PUBLIC_API_HOST
@@ -24,15 +27,14 @@ const FilerHandler = () => {
             }), {
             loading: 'Downloading...',
             success: ({ data }) => {
-                console.log(data)
                 if (!data.link)
-                    throw new Error('Failed to convert')
+                    throw new Error('Video does not exist')
 
                 setDownloadableFile(data.link)
                 setVideoTitle(data.title)
                 return 'Your song is ready to download'
             },
-            error: (err) => 'Failed to convert'
+            error: (err) => `${err.message}`
         })
     }
 
@@ -64,14 +66,8 @@ const FilerHandler = () => {
     return (
         <>
             <main className='my-2 flex justify-center items-center flex-col'>
-                <h1 className='my-4 text-xl'>Youtube to MP3 Converter</h1>
-                <h4>Enter the Video ID you want to convert</h4>
-                <div className="flex justify-center items-center flex-col">
-                    <div className="demo_image">
-                        <img src="/detail.jpg" alt="Demo Image" />
-                    </div>
-                    <h5 className='mt-2'>**This is the video ID</h5>
-                </div>
+                <h1 className='my-4 text-xl'>YtToMP3: Youtube to MP3 Converter</h1>
+                <h4>Please enter the URL of the video</h4>
             </main>
             <div className="flex items-center justify-center p-5">
                 <div className="rounded-lg bg-gray-200 sm:p-5 sm:w-4/5 w-full p-1">
@@ -102,8 +98,7 @@ const FilerHandler = () => {
             <section className='my-2 flex justify-center items-center flex-col'>
                 {downloadableFile && (
                     <>
-                        <h4 className='my-2'>Your song is ready to download</h4>
-                        <p className='my-3 mb-5'>{videoTitle}</p>
+                        <h4 className='my-2'>Your video <span className='font-extrabold text-red-700'>{videoTitle}</span> is ready to download</h4>
                         <a href={downloadableFile} download>
                             <button
                                 className='bg-blue-500 p-2 rounded-lg text-white font-semibold hover:bg-blue-800 transition-colors cursor-pointer'
@@ -115,6 +110,17 @@ const FilerHandler = () => {
                     </>
                 )}
             </section>
+
+            <main className='sm:w-4/5 container mx-auto mb-6'>
+                <p className='my-3 text-sm'>YouTube.com is the largest video sharing platform on the Internet. Every day millions of new videos are added. You can find all kinds of videos but YouTube does not offer a FREE downloading service for these videos.</p>
+                <p className='my-3 text-sm'>YTMP3 allows you to download your favorite YouTube videos as MP3 (audio) or MP4 (video) files in the most efficient way. You are able to use YTMP3 on any device – it is optimized to work on desktop, tablet and mobile devices. There is also no additional software or app needed.</p>
+                <h2 className='my-4 text-slate-300 font-bold'>How to download a YouTube video?</h2>
+                <p><span>1.</span> Open YouTube.com and search for the video you would like to download.</p>
+                <p><span>2.</span> When you find the video, click on it and wait until it starts playing. Then, just copy the video URL from your browser address bar.</p>
+                <p><span>3.</span> Open <a href="">YtToMP3</a> and paste the video URL in our converter. After that you will be able to choose the download format. You can choose between MP3 or MP4. If you do not choose any format the video will be converted by default into a MP3 file.</p>
+                <p><span>4.</span> Then, simply click on the Convert button. The conversion will be initiated, and may take a few minutes. We will try to convert the video in the best available quality. But be aware that it is only possible to download videos that are up to 90 minutes long, to guarantee that the conversion will be done within a few minutes.</p>
+                <p><span>5.</span> As soon as the conversion of the video is completed you will see a Download button. Just click on it, and the download shall start.</p>
+            </main>
 
             <Toaster
                 position='bottom-left'
