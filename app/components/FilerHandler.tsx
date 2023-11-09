@@ -5,10 +5,6 @@ import axios from 'axios'
 import getVideoId from 'get-video-id';
 import { toast, Toaster } from 'react-hot-toast'
 
-interface ErrorProps {
-    msg: string;
-}
-
 const FilerHandler = () => {
     const [text, setText] = useState('')
     const [videoTitle, setVideoTitle] = useState('')
@@ -22,7 +18,7 @@ const FilerHandler = () => {
 
         const { id } = getVideoId(text)
         toast.loading('Fetching video...', { duration: 1000 })
-        
+
         try {
             const { data } = await axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${id}`, {
                 'headers': {
@@ -55,7 +51,7 @@ const FilerHandler = () => {
             });
 
             setTimeout(() => {
-                toast.success('Just kidding, your song is getting downloaded 😘', {
+                toast.success('Just kidding, your video being downloaded 😘', {
                     duration: 3000,
                     style: {
                         background: '#363636',
