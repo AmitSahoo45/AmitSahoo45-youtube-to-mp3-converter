@@ -5,6 +5,10 @@ import axios from 'axios'
 import getVideoId from 'get-video-id';
 import { toast, Toaster } from 'react-hot-toast'
 
+interface ErrorProps {
+    msg: string;
+}
+
 const FilerHandler = () => {
     const [text, setText] = useState('')
     const [videoTitle, setVideoTitle] = useState('')
@@ -17,25 +21,27 @@ const FilerHandler = () => {
         }
 
         const { id } = getVideoId(text)
-
-        toast.promise(
-            axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${id}`, {
+        toast.loading('Fetching video...', { duration: 1000 })
+        
+        try {
+            const { data } = await axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${id}`, {
                 'headers': {
                     'x-rapidapi-key': process.env.NEXT_PUBLIC_API_KEY,
                     'x-rapidapi-host': process.env.NEXT_PUBLIC_API_HOST
                 }
-            }), {
-            loading: 'Downloading...',
-            success: ({ data }) => {
-                if (!data.link)
-                    throw new Error('Video does not exist')
+            })
 
-                setDownloadableFile(data.link)
-                setVideoTitle(data.title)
-                return 'Your song is ready to download'
-            },
-            error: (err) => `${err.message}`
-        })
+            console.log(data)
+
+            if (!data.link)
+                throw new Error(data.msg)
+
+            setDownloadableFile(data.link)
+            setVideoTitle(data.title)
+            toast.success('Your song is ready to download')
+        } catch (error: any) {
+            toast.error(error.message, { duration: 3000 })
+        }
     }
 
     const downloadFile = () => {
