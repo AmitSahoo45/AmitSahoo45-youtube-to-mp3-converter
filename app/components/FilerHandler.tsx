@@ -20,7 +20,7 @@ const FilerHandler = () => {
         toast.loading('Fetching video...', { duration: 1000 })
 
         try {
-            const { data } = await axios.post(process.env.NEXT_PUBLIC_API_KEY as string, { text: id })
+            const { data } = await axios.post('https://yttomp3backend.vercel.app/api/fetchVideo', { text: id })
 
             if (!data.link)
                 throw new Error(data.msg)
