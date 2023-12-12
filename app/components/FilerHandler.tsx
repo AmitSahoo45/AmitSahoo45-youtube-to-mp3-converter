@@ -20,14 +20,7 @@ const FilerHandler = () => {
         toast.loading('Fetching video...', { duration: 1000 })
 
         try {
-            const { data } = await axios.get(`https://youtube-mp36.p.rapidapi.com/dl?id=${id}`, {
-                'headers': {
-                    'x-rapidapi-key': process.env.NEXT_PUBLIC_API_KEY,
-                    'x-rapidapi-host': process.env.NEXT_PUBLIC_API_HOST
-                }
-            })
-
-            console.log(data)
+            const { data } = await axios.post(process.env.NEXT_PUBLIC_API_KEY as string, { text: id })
 
             if (!data.link)
                 throw new Error(data.msg)
@@ -36,6 +29,7 @@ const FilerHandler = () => {
             setVideoTitle(data.title)
             toast.success('Your song is ready to download')
         } catch (error: any) {
+            console.log(error)
             toast.error(error.message, { duration: 3000 })
         }
     }
