@@ -1,8 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+
 import axios from 'axios'
-import getVideoId from 'get-video-id';
+import getVideoId from 'get-video-id'
 import { toast, Toaster } from 'react-hot-toast'
 
 const FilerHandler = () => {
@@ -29,6 +30,7 @@ const FilerHandler = () => {
             setVideoTitle(data.title)
             toast.success('Your song is ready to download')
         } catch (error: any) {
+            console.log('1')
             console.log(error)
             toast.error(error.message, { duration: 3000 })
         }
@@ -40,8 +42,8 @@ const FilerHandler = () => {
                 duration: 1500,
                 style: {
                     background: '#363636',
-                    color: '#fff',
-                },
+                    color: '#fff'
+                }
             });
 
             setTimeout(() => {
@@ -49,8 +51,8 @@ const FilerHandler = () => {
                     duration: 3000,
                     style: {
                         background: '#363636',
-                        color: '#fff',
-                    },
+                        color: '#fff'
+                    }
                 });
             }, 1500);
             setDownloadableFile(null);
@@ -107,15 +109,21 @@ const FilerHandler = () => {
                 )}
             </section>
 
-            <main className='sm:w-4/5 container mx-auto mb-6'>
-                <p className='my-3 text-sm'>YouTube.com is the largest video sharing platform on the Internet. Every day millions of new videos are added. You can find all kinds of videos but YouTube does not offer a FREE downloading service for these videos.</p>
-                <p className='my-3 text-sm'>YTMP3 allows you to download your favorite YouTube videos as MP3 (audio) or MP4 (video) files in the most efficient way. You are able to use YTMP3 on any device – it is optimized to work on desktop, tablet and mobile devices. There is also no additional software or app needed.</p>
-                <h2 className='my-4 text-slate-300 font-bold'>How to download a YouTube video?</h2>
-                <p><span>1.</span> Open YouTube.com and search for the video you would like to download.</p>
-                <p><span>2.</span> When you find the video, click on it and wait until it starts playing. Then, just copy the video URL from your browser address bar.</p>
-                <p><span>3.</span> Open <a href="">YtToMP3</a> and paste the video URL in our converter. After that you will be able to choose the download format. You can choose between MP3 or MP4. If you do not choose any format the video will be converted by default into a MP3 file.</p>
-                <p><span>4.</span> Then, simply click on the Convert button. The conversion will be initiated, and may take a few minutes. We will try to convert the video in the best available quality. But be aware that it is only possible to download videos that are up to 90 minutes long, to guarantee that the conversion will be done within a few minutes.</p>
-                <p><span>5.</span> As soon as the conversion of the video is completed you will see a Download button. Just click on it, and the download shall start.</p>
+            <main className='sm:w-4/5 container mx-auto px-6 mb-6'>
+                <div>
+                    <p className='my-3 text-sm'>YouTube.com is the largest video sharing platform on the Internet. Every day millions of new videos are added. You can find all kinds of videos but YouTube does not offer a FREE downloading service for these videos.</p>
+                    <p className='my-3 text-sm'>YTMP3 allows you to download your favorite YouTube videos as MP3 (audio) or MP4 (video) files in the most efficient way. You are able to use YTMP3 on any device – it is optimized to work on desktop, tablet and mobile devices. There is also no additional software or app needed.</p>
+                    <h2 className='my-4 text-slate-300 font-bold'>How to download a YouTube video?</h2>
+                    <p><span>1.</span> Open YouTube.com and search for the video you would like to download.</p>
+                    <p><span>2.</span> When you find the video, click on it and wait until it starts playing. Then, just copy the video URL from your browser address bar.</p>
+                    <p><span>3.</span> Open <a href="">YtToMP3</a> and paste the video URL in our converter. After that you will be able to choose the download format. You can choose between MP3 or MP4. If you do not choose any format the video will be converted by default into a MP3 file.</p>
+                    <p><span>4.</span> Then, simply click on the Convert button. The conversion will be initiated, and may take a few minutes. We will try to convert the video in the best available quality. But be aware that it is only possible to download videos that are up to 90 minutes long, to guarantee that the conversion will be done within a few minutes.</p>
+                    <p><span>5.</span> As soon as the conversion of the video is completed you will see a Download button. Just click on it, and the download shall start.</p>
+                </div>
+
+                <div>
+
+                </div>
             </main>
 
             <Toaster
@@ -124,22 +132,22 @@ const FilerHandler = () => {
                     duration: 2000,
                     style: {
                         background: '#363636',
-                        color: '#fff',
+                        color: '#fff'
                     },
                     success: {
                         duration: 2000,
                         style: {
                             background: '#363636',
-                            color: '#fff',
-                        },
+                            color: '#fff'
+                        }
                     },
                     error: {
                         duration: 2000,
                         style: {
                             background: '#363636',
-                            color: '#fff',
-                        },
-                    },
+                            color: '#fff'
+                        }
+                    }
                 }}
             />
         </>
