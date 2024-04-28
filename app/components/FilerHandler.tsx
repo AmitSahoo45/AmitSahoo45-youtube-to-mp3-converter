@@ -185,10 +185,9 @@ const FilerHandler = () => {
                         />
                         <div className='mt-4 mb-1'>
                             {mp4Details.formats.map((format, index) => (
-                                <div className='sm:w-1/2 w-full flex items-center py-2'>
+                                <div key={index} className='sm:w-1/2 w-full flex items-center py-2'>
                                     <p className='mr-3'>{format.qualityLabel}</p>
                                     <a
-                                        key={index}
                                         href={format.url}
                                         download
                                     >
