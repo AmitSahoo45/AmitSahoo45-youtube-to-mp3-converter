@@ -6,8 +6,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'YtToMP3: YouTube to MP3 Converter',
-  description: 'Download your YouTube videos as MP3 (audio) files with the fastest and most powerful YouTube Converter. No app or software needed.',
+  title: 'YtToMP3/MP4: YouTube to MP3/MP4 Converter',
+  description: 'Download your YouTube videos as MP3/MP4 (audio/video) files with the fastest and most powerful YouTube Converter. No app or software needed.'
 }
 
 export default function RootLayout({

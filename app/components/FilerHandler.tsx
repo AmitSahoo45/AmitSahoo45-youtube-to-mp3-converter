@@ -6,12 +6,18 @@ import axios from 'axios'
 import getVideoId from 'get-video-id'
 import { toast, Toaster } from 'react-hot-toast'
 
+import { MP4Type } from '@/types/types'
+import Image from 'next/image'
+import Loader from './Loader'
+
 const FilerHandler = () => {
     const [text, setText] = useState('')
     const [videoTitle, setVideoTitle] = useState('')
     const [downloadableFile, setDownloadableFile] = useState(null)
 
-    const downloadSong = async () => {
+    const [mp4Details, setMp4Details] = useState<MP4Type | null>(null)
+
+    const convertToMp3 = async () => {
         if (text === '') {
             toast.error('Please enter the video ID')
             return
@@ -21,22 +27,50 @@ const FilerHandler = () => {
         toast.loading('Fetching video...', { duration: 1000 })
 
         try {
-            const { data } = await axios.post(process.env.NEXT_PUBLIC_API_KEY as string, { text: id })
+            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}/api/fetchVideo` as string, { text: id })
 
             if (!data.link)
                 throw new Error(data.msg)
 
             setDownloadableFile(data.link)
             setVideoTitle(data.title)
-            toast.success('Your song is ready to download')
+            toast.success('Converted successfully!')
         } catch (error: any) {
-            console.log('1')
-            console.log(error)
             toast.error(error.message, { duration: 3000 })
         }
     }
 
-    const downloadFile = () => {
+    const convertToMp4 = async () => {
+        if (text === '') {
+            toast.error('Please enter the video ID')
+            return
+        }
+
+        const { id } = getVideoId(text)
+        toast.loading('Fetching video...', { duration: 1000 })
+
+        try {
+            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}/api/convertToMp4` as string, { text: id })
+            setMp4Details(data);
+            toast.success('Converted successfully!')
+        } catch (error: any) {
+            toast.error(error.message, { duration: 3000 })
+        }
+    }
+
+    const getNumber = (): number => {
+        if (!mp4Details?.thumbnail) return 0;
+
+        if (mp4Details.thumbnail.length === 1) return Number(mp4Details.thumbnail[0]) || 0;
+
+        const secondLastIndex = mp4Details.thumbnail.length - 2;
+        const secondLastValue = mp4Details.thumbnail[secondLastIndex];
+
+        return Number(secondLastValue) || 0;
+    };
+
+
+    const downloadFile = (isMp3: boolean) => {
         if (downloadableFile) {
             toast.error('Downloading virus 😈', {
                 duration: 1500,
@@ -55,20 +89,40 @@ const FilerHandler = () => {
                     }
                 });
             }, 1500);
-            setDownloadableFile(null);
-        } else {
-            toast.error('Failed to download')
-        }
+
+            isMp3 ?
+                setDownloadableFile(null) :
+                setMp4Details(null);
+        } else toast.error('Failed to download')
     };
 
     return (
         <>
             <main className='my-2 flex justify-center items-center flex-col'>
-                <h1 className='my-4 text-xl'>YtToMP3: Youtube to MP3 Converter</h1>
+                <h1 className='my-4 text-xl'>YtToMP3/MP4: Youtube to MP3/MP4 Converter</h1>
+
+                <div className='sm:w-1/2 w-full text-center'>
+                    <p className='text-xs'>
+                        The safest and most reliable Youtube to MP3 or MP4 converter.
+                        No need to worry about phishing links and stuff.
+                        Made by a Developer 😘
+                        Just paste the URL and download your favorite videos/audios in the best quality.
+                    </p>
+
+                    <p className='my-3'>
+                        Drop me a follow on &nbsp;
+                        <a
+                            className='text-purple-300 hover:text-purple-500 font-bold'
+                            href='https://github.com/AmitSahoo45'
+                        >
+                            GitHub
+                        </a>
+                    </p>
+                </div>
                 <h4>Please enter the URL of the video</h4>
             </main>
-            <div className="flex items-center justify-center p-5">
-                <div className="rounded-lg bg-gray-200 sm:p-5 sm:w-4/5 w-full p-1">
+            <div className="flex items-center justify-center p-5 flex-col">
+                <div className="rounded-lg bg-gray-200 sm:p-3 sm:w-4/5 w-full p-1">
                     <div className="flex w-full">
                         <div className="flex w-10 items-center justify-center rounded-tl-lg rounded-bl-lg border-r border-gray-200 bg-white p-5">
                             <svg viewBox="0 0 20 20" aria-hidden="true" className="pointer-events-none absolute w-5 fill-gray-500 transition">
@@ -82,32 +136,74 @@ const FilerHandler = () => {
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                         />
-                        <button
-                            type="button"
-                            className="bg-blue-500 p-2 rounded-tr-lg rounded-br-lg text-white font-semibold hover:bg-blue-800 transition-colors cursor-pointer"
-                            onClick={downloadSong}
-                        >
-                            Download
-                        </button>
                     </div>
+                </div>
+
+                <div className='mt-4'>
+                    <button
+                        type="button"
+                        className="bg-cyan-500 p-2 rounded-tl-lg rounded-bl-lg text-white font-semibold hover:bg-cyan-800 transition-colors cursor-pointer"
+                        onClick={() => convertToMp4()}
+                    >
+                        Convert to MP4
+                    </button>
+                    <button
+                        type="button"
+                        className="bg-blue-500 p-2 rounded-tr-lg rounded-br-lg text-white font-semibold hover:bg-blue-800 transition-colors cursor-pointer"
+                        onClick={convertToMp3}
+                    >
+                        Convert to MP3
+                    </button>
                 </div>
             </div>
 
-            <section className='my-2 flex justify-center items-center flex-col'>
-                {downloadableFile && (
-                    <>
-                        <h4 className='my-2'>Your video <span className='font-extrabold text-red-700'>{videoTitle}</span> is ready to download</h4>
-                        <a href={downloadableFile} download>
-                            <button
-                                className='bg-blue-500 p-2 rounded-lg text-white font-semibold hover:bg-blue-800 transition-colors cursor-pointer'
-                                onClick={downloadFile}
-                            >
-                                Download
-                            </button>
-                        </a>
-                    </>
+            {downloadableFile && (
+                <section className='my-2 flex justify-center items-center flex-col'>
+                    <h4 className='my-2'>Your MP3 <span className='font-extrabold text-red-700'>{videoTitle}</span> is ready to download</h4>
+                    <a href={downloadableFile} download>
+                        <button
+                            className='bg-blue-500 p-2 rounded-lg text-white font-semibold hover:bg-blue-800 transition-colors cursor-pointer'
+                            onClick={() => downloadFile(true)}
+                        >
+                            Download
+                        </button>
+                    </a>
+                </section>
+            )}
+
+
+            {mp4Details
+                && (
+                    <section className='mb-2 flex justify-center items-center flex-col'>
+                        <p>Your MP4 file <span className='font-extrabold text-red-700'>{mp4Details.title}</span> is ready to download</p>
+                        <Image
+                            src={mp4Details.thumbnail[getNumber()].url}
+                            width={mp4Details.thumbnail[getNumber()].width}
+                            height={mp4Details.thumbnail[getNumber()].height}
+                            alt={mp4Details.title}
+                            className='rounded-lg mt-2'
+                        />
+                        <div className='mt-4 mb-1'>
+                            {mp4Details.formats.map((format, index) => (
+                                <div className='sm:w-1/2 w-full flex items-center py-2'>
+                                    <p className='mr-3'>{format.qualityLabel}</p>
+                                    <a
+                                        key={index}
+                                        href={format.url}
+                                        download
+                                    >
+                                        <button
+                                            className='bg-cyan-500 p-2 rounded-lg text-white font-light hover:bg-cyan-800 transition-colors cursor-pointer w-40'
+                                            onClick={() => downloadFile(false)}
+                                        >
+                                            View & Download
+                                        </button>
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
                 )}
-            </section>
 
             <main className='sm:w-4/5 container mx-auto px-6 mb-6'>
                 <div>
@@ -122,7 +218,27 @@ const FilerHandler = () => {
                 </div>
 
                 <div>
+                    <p>Youtube to MP4</p>
+                    <p>Convert Youtube to mp4 with high quality in 1080p, 2160p, 2k, 4k, 8k for free. Download Youtube video in mp4 format, no need to install software.</p>
+                    <div className="y2mate-in-ad col-sm-6 col-6">
+                        <h5><strong>Features</strong></h5>
+                        <ul>
+                            <li>Free Convert and download Youtube to MP4</li>
+                            <li>Unlimited Video Download from Youtube</li>
+                            <li>Simple and Fast youtube to mp4 Converter</li>
+                            <li>Supports converter video YouTube to Mp3 and other formats</li>
+                        </ul>
+                    </div>
 
+                    <div className="y2mate-in-ad col-sm-6 col-6">
+                        <h5><strong>Instructions:</strong></h5>
+                        <ol>
+                            <li>Open YouTube website and copy URL of the Youtube video to MP4 that you want to convert and download</li>
+                            <li>Paste this URL into the Search box and press the Start button</li>
+                            <li>Choose the video format you would like to download from youtube</li>
+                            <li>After successful conversion click on Download button</li>
+                        </ol>
+                    </div>
                 </div>
             </main>
 
