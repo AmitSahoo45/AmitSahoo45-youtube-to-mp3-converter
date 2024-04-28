@@ -27,7 +27,6 @@ const FilerHandler = () => {
         toast.loading('Fetching video...', { duration: 1000 })
 
         try {
-            console.log(`${process.env.NEXT_PUBLIC_API_KEY}` as string)
             const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}api/fetchVideo` as string, { text: id })
 
             if (!data.link)
@@ -51,7 +50,7 @@ const FilerHandler = () => {
         toast.loading('Fetching video...', { duration: 1000 })
 
         try {
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}/api/convertToMp4` as string, { text: id })
+            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}api/convertToMp4` as string, { text: id })
             setMp4Details(data);
             toast.success('Converted successfully!')
         } catch (error: any) {
