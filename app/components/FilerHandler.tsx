@@ -36,6 +36,7 @@ const FilerHandler = () => {
             setVideoTitle(data.title)
             toast.success('Converted successfully!')
         } catch (error: any) {
+            console.log(error)
             toast.error(error.message, { duration: 3000 })
         }
     }
