@@ -121,16 +121,6 @@ const FilerHandler = () => {
                             Made by a Developer.
                             Just paste the URL and download your favorite videos/audios in the best quality.
                         </p>
-
-                        <p className='my-3'>
-                            Drop me a follow on &nbsp;
-                            <a
-                                className='text-purple-300 hover:text-purple-500 font-bold'
-                                href='https://github.com/AmitSahoo45'
-                            >
-                                GitHub
-                            </a>
-                        </p>
                     </div>
                 </header>
 
