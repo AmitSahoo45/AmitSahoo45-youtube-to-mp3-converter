@@ -1,14 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import axios from 'axios'
 import getVideoId from 'get-video-id'
 import { toast, Toaster } from 'react-hot-toast'
 
-import { MP4Type } from '@/types/types'
+import { MP4Type } from '@/helper/types'
 import Image from 'next/image'
-import Loader from './Loader'
 
 const FilerHandler = () => {
     const [text, setText] = useState('')
@@ -70,7 +69,6 @@ const FilerHandler = () => {
         return Number(secondLastValue) || 0;
     };
 
-
     const downloadFile = (isMp3: boolean) => {
         if (downloadableFile) {
             toast.error('Downloading virus 😈', {
@@ -97,29 +95,45 @@ const FilerHandler = () => {
         } else toast.error('Failed to download')
     };
 
+    const fetchRegionDetails = async () => {
+        try {
+            console.log('fetching region details')
+            const response = await fetch('/api/getCountry');
+            const data = await response.json();
+            console.log(data)
+        } catch (error: any) { /* empty */ }
+    }
+
+    useEffect(() => {
+        fetchRegionDetails()
+    }, []);
+
     return (
         <>
-            <main className='my-2 flex justify-center items-center flex-col'>
-                <h1 className='my-4 text-xl'>YtToMP3/MP4: Youtube to MP3/MP4 Converter</h1>
+            <main className='my-2 text-center'>
+                <header className='my-4 text-3xl flex justify-center items-center flex-col'>
+                    <h1 className='my-4 text-xl'>YtToMP3/MP4: Youtube to MP3/MP4 Converter</h1>
 
-                <div className='sm:w-1/2 w-full text-center'>
-                    <p className='text-xs'>
-                        The safest and most reliable Youtube to MP3 or MP4 converter.
-                        No need to worry about phishing links and stuff.
-                        Made by a Developer 😘
-                        Just paste the URL and download your favorite videos/audios in the best quality.
-                    </p>
+                    <div className='sm:w-1/2 w-full text-center'>
+                        <p className='text-xs'>
+                            The safest and most reliable Youtube to MP3 or MP4 converter.
+                            No need to worry about phishing links and stuff.
+                            Made by a Developer.
+                            Just paste the URL and download your favorite videos/audios in the best quality.
+                        </p>
 
-                    <p className='my-3'>
-                        Drop me a follow on &nbsp;
-                        <a
-                            className='text-purple-300 hover:text-purple-500 font-bold'
-                            href='https://github.com/AmitSahoo45'
-                        >
-                            GitHub
-                        </a>
-                    </p>
-                </div>
+                        <p className='my-3'>
+                            Drop me a follow on &nbsp;
+                            <a
+                                className='text-purple-300 hover:text-purple-500 font-bold'
+                                href='https://github.com/AmitSahoo45'
+                            >
+                                GitHub
+                            </a>
+                        </p>
+                    </div>
+                </header>
+
                 <h4>Please enter the URL of the video</h4>
             </main>
             <div className="flex items-center justify-center p-5 flex-col">
@@ -239,6 +253,28 @@ const FilerHandler = () => {
                             <li>After successful conversion click on Download button</li>
                         </ol>
                     </div>
+
+                    <ol>
+                        <ul className="img-content">
+                            <h3>100% Safe and Secure</h3>
+                            <p>Security is First priority when you download data from a third-party website. Our website takes care of it and we provide safe and clean youtube files.</p>
+                        </ul>
+
+                        <ul className="img-content">
+                            <h3>Easy and Quick Download</h3>
+                            <p>Downloader Easy interference so using this Youtube Downloader Download and save Audio and Video fast and Easy. Simply copy and paste the youtube URL into the search box and press the convert button. No register accounts needed.</p>
+                        </ul>
+
+                        <ul className="img-content">
+                            <h3>Without restriction (Unlimited use)</h3>
+                            <p>Convert and Download Youtube mp3 and mp4 from youtube as much as you want without limitation and Always free of cost.</p>
+                        </ul>
+
+                        <ul className="img-content">
+                            <h3>Full platforms supported</h3>
+                            <p>YtToMP3/MP4 Supports and compatible with All device platforms like Windows, Mac or Linux, Android, and iPhone. Totally Mobile-friendly website.</p>
+                        </ul>
+                    </ol>
                 </div>
             </main>
 
