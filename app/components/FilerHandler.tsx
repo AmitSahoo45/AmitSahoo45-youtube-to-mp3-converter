@@ -36,7 +36,7 @@ const FilerHandler = () => {
             toast.success('Converted successfully!')
         } catch (error: any) {
             console.log(error)
-            toast.error(error.message, { duration: 3000 })
+            toast.error(error.response.data.message, { duration: 3000 })
         }
     }
 
