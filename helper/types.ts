@@ -1,9 +1,10 @@
-type Format = {
+export type Format = {
     qualityLabel: string,
-    url: string
+    url: string,
+    itag?: number
 }
 
-type ThumbnailFormat = {
+export type ThumbnailFormat = {
     url: string,
     height: number,
     width: number
