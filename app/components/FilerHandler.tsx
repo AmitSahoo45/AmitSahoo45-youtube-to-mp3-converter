@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 
 import axios from 'axios'
 import getVideoId from 'get-video-id'
+import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
 import { toast, Toaster } from 'react-hot-toast'
 
 import { MP4Type } from '@/helper/types'
 import Image from 'next/image'
+import DownloadSection from './DownloadSection';
 
 const FilerHandler = () => {
     const [text, setText] = useState('')
@@ -15,46 +17,66 @@ const FilerHandler = () => {
     const [downloadableFile, setDownloadableFile] = useState(null)
 
     const [mp4Details, setMp4Details] = useState<MP4Type | null>(null)
+    const { executeRecaptcha } = useGoogleReCaptcha();
 
     const convertToMp3 = async () => {
-        if (text === '') {
-            toast.error('Please enter the video ID')
-            return
-        }
+        if (text === '')
+            return toast.error('Please enter the video ID')
 
         const { id } = getVideoId(text)
         toast.loading('Fetching video...', { duration: 1000 })
 
+        if (!executeRecaptcha)
+            return toast.error('reCAPTCHA not available');
+
+        const token = await executeRecaptcha('convert_to_mp3');
+
         try {
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}api/fetchVideo` as string, { text: id })
+            const response = await axios.post('/api/convert', { token, text: id, type: 'mp3' });
 
-            if (!data.link)
-                throw new Error(data.msg)
-
-            setDownloadableFile(data.link)
-            setVideoTitle(data.title)
-            toast.success('Converted successfully!')
+            if (response.data.success) {
+                setDownloadableFile(response.data.link);
+                setVideoTitle(response.data.title);
+                toast.dismiss();
+                toast.success('Converted successfully!');
+            } else {
+                throw new Error(response.data.error || 'Conversion failed');
+            }
         } catch (error: any) {
+            toast.dismiss();
+            toast.error(error.response?.data?.error || error.message || 'Conversion failed', { duration: 3000 })
+
             console.log(error)
             toast.error(error.response.data.message, { duration: 3000 })
         }
     }
 
     const convertToMp4 = async () => {
-        if (text === '') {
-            toast.error('Please enter the video ID')
-            return
-        }
+        if (text === '')
+            return toast.error('Please enter the video ID')
 
         const { id } = getVideoId(text)
         toast.loading('Fetching video...', { duration: 1000 })
 
+        if (!executeRecaptcha)
+            return toast.error('reCAPTCHA not available');
+
+        const token = await executeRecaptcha('convert_to_mp3');
+
         try {
-            const { data } = await axios.post(`${process.env.NEXT_PUBLIC_API_KEY}api/convertToMp4` as string, { text: id })
-            setMp4Details(data);
-            toast.success('Converted successfully!')
+            const response = await axios.post('/api/convert', { token, text: id, type: 'mp4' });
+
+            if (response.data.success) {
+                setMp4Details(response.data);
+                console.log(response.data.formats);
+                toast.dismiss();
+                toast.success('Converted successfully!');
+            } else {
+                throw new Error(response.data.error || 'Conversion failed');
+            }
         } catch (error: any) {
-            toast.error(error.message, { duration: 3000 })
+            toast.dismiss();
+            toast.error(error.response?.data?.error || error.message || 'Conversion failed', { duration: 3000 })
         }
     }
 
@@ -97,10 +119,8 @@ const FilerHandler = () => {
 
     const fetchRegionDetails = async () => {
         try {
-            console.log('fetching region details')
             const response = await fetch('/api/getCountry');
             const data = await response.json();
-            console.log(data)
         } catch (error: any) { /* empty */ }
     }
 
@@ -177,38 +197,7 @@ const FilerHandler = () => {
             )}
 
 
-            {mp4Details
-                && (
-                    <section className='mb-2 flex justify-center items-center flex-col'>
-                        <p>Your MP4 file <span className='font-extrabold text-red-700'>{mp4Details.title}</span> is ready to download</p>
-                        <Image
-                            src={mp4Details.thumbnail[getNumber()].url}
-                            width={mp4Details.thumbnail[getNumber()].width}
-                            height={mp4Details.thumbnail[getNumber()].height}
-                            alt={mp4Details.title}
-                            className='rounded-lg mt-2'
-                        />
-                        <div className='mt-4 mb-1'>
-                            {mp4Details.formats.map((format, index) => (
-                                <div key={index} className='sm:w-1/2 w-full flex items-center py-2'>
-                                    <p className='mr-3'>{format.qualityLabel}</p>
-                                    <a
-                                        href={format.url}
-                                        download
-                                    >
-                                        <button
-                                            className='bg-cyan-500 p-2 rounded-lg text-white font-light hover:bg-cyan-800 transition-colors cursor-pointer w-40'
-                                            onClick={() => downloadFile(false)}
-                                        >
-                                            View & Download
-                                        </button>
-                                    </a>
-                                </div>
-                            ))}
-                        </div>
-                    </section>
-                )}
-
+            {mp4Details && <DownloadSection mp4Details={mp4Details} downloadFile={downloadFile} getNumber={getNumber} />}
             <main className='sm:w-4/5 container mx-auto px-6 mb-6'>
                 <div>
                     <p className='my-3 text-sm'>YouTube.com is the largest video sharing platform on the Internet. Every day millions of new videos are added. You can find all kinds of videos but YouTube does not offer a FREE downloading service for these videos.</p>
