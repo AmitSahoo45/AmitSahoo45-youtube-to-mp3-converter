@@ -45,6 +45,9 @@ const FilerHandler = () => {
         } catch (error: any) {
             toast.dismiss();
             toast.error(error.response?.data?.error || error.message || 'Conversion failed', { duration: 3000 })
+
+            console.log(error)
+            toast.error(error.response.data.message, { duration: 3000 })
         }
     }
 
