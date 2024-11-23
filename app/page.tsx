@@ -8,7 +8,7 @@ const FilerHandler = dynamic(() => import('@/app/components/FilerHandler'), { ss
 export default function Home() {
   return (
     <>
-      <GoogleReCaptchaProvider reCaptchaKey="6LeJxH0qAAAAAC5BWWCtkePuCdWwIyVPHgLM8Efl">
+      <GoogleReCaptchaProvider reCaptchaKey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY as string}>
         <FilerHandler />
       </GoogleReCaptchaProvider>
     </>
