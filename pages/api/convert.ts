@@ -35,7 +35,7 @@ export default async function handler(
         const response = await axios.post(verificationUrl);
         const { success, score } = response.data;
 
-        console.log('reCAPTCHA verification:', response.data);
+        console.log('reCAPTCHA verification:' + score + ' ' + success);
 
         if (!success)
             return res.status(400).json({ success: false, error: 'reCAPTCHA verification failed' });
@@ -72,7 +72,7 @@ export default async function handler(
             title: data.title,
         });
     } catch (error) {
-        console.error("Error verifying reCAPTCHA:", error);
-        return res.status(500).json({ success: false });
+        console.log('Error in /api/convert:', error);
+        return res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Internal server error' });
     }
 }
