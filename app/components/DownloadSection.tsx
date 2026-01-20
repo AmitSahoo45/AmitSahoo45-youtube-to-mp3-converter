@@ -8,10 +8,10 @@ interface DownloadSectionProps {
     getNumber: () => number
 }
 
+// Replace lines 14-18 with:
 const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, getNumber }) => {
-    const bestItags: Number[] = [134, 135, 136, 137]
-
     const filteredFormats = useMemo(() => {
+        const bestItags: Number[] = [134, 135, 136, 137]
         return mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag)) || []
     }, [mp4Details])
 
@@ -139,7 +139,7 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
 
                 {/* Disclaimer */}
                 <p className="text-xs text-gray-600 text-center mt-6">
-                    By downloading, you agree to use this content in accordance with YouTube's Terms of Service.
+                    By downloading, you agree to use this content in accordance with YouTube&apos;s Terms of Service.
                 </p>
             </div>
         </section>
