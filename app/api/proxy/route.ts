@@ -43,6 +43,22 @@ export async function GET(request: NextRequest) {
             );
         }
 
+        const clientParam = urlObj.searchParams.get('c');
+        let userAgent: string;
+
+        switch (clientParam) {
+            case 'IOS':
+                userAgent = 'com.google.ios.youtube/19.29.1 (iPhone16,2; U; CPU iOS 17_5_1 like Mac OS X;)';
+                break;
+            case 'ANDROID':
+                userAgent = 'com.google.android.youtube/19.29.37 (Linux; U; Android 14)';
+                break;
+            case 'WEB':
+            default:
+                userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36';
+                break;
+        }
+
         // Rate limiting - more restrictive for proxy endpoint (5 per hour)
         const clientIP = getClientIP(request);
         const rateLimitResult = await rateLimit(`proxy:${clientIP}`, 5, 3600);
@@ -65,7 +81,7 @@ export async function GET(request: NextRequest) {
         // Fetch the audio stream
         const response = await fetch(audioUrl, {
             headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'User-Agent': userAgent,
                 'Accept': '*/*',
                 'Accept-Encoding': 'identity',
                 'Range': request.headers.get('range') || 'bytes=0-',

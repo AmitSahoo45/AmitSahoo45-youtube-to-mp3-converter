@@ -50,7 +50,9 @@ export async function POST(request: NextRequest): Promise<NextResponse<ExtractRe
         }
 
         // Verify reCAPTCHA
-        const recaptchaResult = await verifyRecaptcha(token, 'convert', 0.5);
+        const expectedAction = type === 'audio' ? 'convert_to_mp3' : 'convert_to_mp4';
+        const recaptchaResult = await verifyRecaptcha(token, expectedAction, 0.5);
+
         if (!recaptchaResult.success) {
             return NextResponse.json(
                 { success: false, error: recaptchaResult.error || 'reCAPTCHA verification failed' },
@@ -111,7 +113,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ExtractRe
 
         // Filter and map formats
         const audioFormats: StreamFormat[] = formats
-            .filter((f) => f.hasAudio && !f.hasVideo && f.audioBitrate)
+            .filter((f) => f.hasAudio && !f.hasVideo && f.audioBitrate && f.url) // Added f.url check
             .sort((a, b) => (b.audioBitrate || 0) - (a.audioBitrate || 0))
             .slice(0, 5)
             .map((f) => ({
@@ -125,7 +127,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<ExtractRe
             }));
 
         const videoFormats: StreamFormat[] = formats
-            .filter((f) => f.hasVideo && f.hasAudio && f.qualityLabel)
+            .filter((f) => f.hasVideo && f.hasAudio && f.qualityLabel && f.url)
             .sort((a, b) => {
                 const qualityOrder = ['2160p', '1440p', '1080p', '720p', '480p', '360p', '240p', '144p'];
                 const aIndex = qualityOrder.indexOf(a.qualityLabel || '');

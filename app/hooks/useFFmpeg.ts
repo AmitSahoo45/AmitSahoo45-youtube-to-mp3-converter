@@ -255,6 +255,11 @@ export function useFFmpeg(): UseFFmpegReturn {
             return null;
         }
 
+        if (!audioUrl) {
+            setError('No audio URL provided');
+            return null;
+        }
+
         setIsConverting(true);
         setProgress(0);
         setError(null);
@@ -267,10 +272,34 @@ export function useFFmpeg(): UseFFmpegReturn {
             const audioData = await fetchFile(audioUrl);
             console.log('[FFmpeg] Audio fetched, size:', audioData.byteLength);
 
-            // Determine input format
-            const inputExt = audioUrl.includes('.webm') ? 'webm' : 'm4a';
+            if (audioData.byteLength === 0) {
+                throw new Error('Failed to fetch audio data - empty response');
+            }
+
+            // Determine input format from the original URL (check the proxied url parameter)
+            // Default to m4a as YouTube typically uses that for audio
+            let inputExt = 'm4a';
+
+            // Try to extract original URL from proxy URL
+            try {
+                const urlObj = new URL(audioUrl, window.location.origin);
+                const originalUrl = urlObj.searchParams.get('url');
+                if (originalUrl) {
+                    if (originalUrl.includes('mime=audio%2Fwebm') || originalUrl.includes('mime=audio/webm')) {
+                        inputExt = 'webm';
+                    } else if (originalUrl.includes('mime=audio%2Fmp4') || originalUrl.includes('mime=audio/mp4')) {
+                        inputExt = 'm4a';
+                    }
+                }
+            } catch (e) {
+                // URL parsing failed, stick with default
+                console.log('[FFmpeg] Could not parse URL for format detection, using default:', inputExt);
+            }
+
             const inputFile = `input.${inputExt}`;
             const outputFile = 'output.mp3';
+
+            console.log('[FFmpeg] Using input format:', inputExt);
 
             // Write to virtual filesystem
             await globalFFmpeg.writeFile(inputFile, audioData);

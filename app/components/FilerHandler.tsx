@@ -67,24 +67,24 @@ const FilerHandler = () => {
     }, [ffmpegError]);
 
     const convertToMp3Handler = async () => {
-        if (text === '') 
+        if (text === '')
             return toast.error('Please enter the video URL');
-        
+
 
         const { id } = getVideoId(text);
 
-        if (!id) 
+        if (!id)
             return toast.error('Invalid YouTube URL');
 
-        if (!executeRecaptcha) 
+        if (!executeRecaptcha)
             return toast.error('reCAPTCHA not available');
 
         // Check FFmpeg status
         if (!ffmpegLoaded) {
-            if (ffmpegLoading) 
+            if (ffmpegLoading)
                 return toast.error('Audio converter still loading, please wait...');
 
-            if (!sharedArrayBufferSupported) 
+            if (!sharedArrayBufferSupported)
                 return toast.error(
                     'MP3 conversion not supported in this browser. Try Opera GX or Firefox.',
                     { duration: 5000 }
@@ -114,12 +114,31 @@ const FilerHandler = () => {
                 throw new Error(response.data.error || 'Failed to extract video');
             }
 
-            const { title, audioUrl } = response.data;
+            const { title, audioFormats } = response.data;
             setVideoTitle(title);
+
+            // Get the best audio format URL (first one is highest bitrate)
+            if (!audioFormats || audioFormats.length === 0) {
+                throw new Error('No audio formats available for this video');
+            }
+
+            const bestFormat = audioFormats.find((f: { url?: string }) => f.url);
+            if (!bestFormat?.url) {
+                throw new Error('No downloadable audio format found - video may be protected');
+            }
+
+            const audioUrl = bestFormat.url;
+
+            if (!audioUrl) {
+                throw new Error('Audio URL not available');
+            }
+
+            // Proxy the audio through our server to avoid CORS issues
+            const proxiedUrl = `/api/proxy?url=${encodeURIComponent(audioUrl)}`;
 
             toast.loading('Converting to MP3...', { id: toastId });
 
-            const mp3Blob = await convertToMp3(audioUrl, title);
+            const mp3Blob = await convertToMp3(proxiedUrl, title);
 
             if (!mp3Blob) {
                 throw new Error('Conversion failed');
@@ -168,7 +187,13 @@ const FilerHandler = () => {
                 throw new Error(response.data.error || 'Failed to extract video');
             }
 
-            setMp4Details(response.data);
+            // Transform response to match MP4Type interface
+            const { title, thumbnail, videoFormats } = response.data;
+            setMp4Details({
+                title,
+                thumbnail,
+                formats: videoFormats || []
+            });
             toast.success('Video ready!', { id: toastId });
         } catch (error: any) {
             console.error('[convertToMp4]', error);
