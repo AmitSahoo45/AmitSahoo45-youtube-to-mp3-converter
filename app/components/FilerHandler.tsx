@@ -399,7 +399,7 @@ const FilerHandler = () => {
                                 3
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Download</h3>
-                            <p className="text-gray-400 text-sm">Choose your preferred quality and click download. That's it!</p>
+                            <p className="text-gray-400 text-sm">Choose your preferred quality and click download. That&apos;s it!</p>
                         </div>
                     </div>
                 </div>
