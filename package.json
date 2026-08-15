@@ -2,6 +2,9 @@
   "name": "referenc",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.20.0 <23"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -19,7 +22,7 @@
     "react-hot-toast": "^2.4.1"
   },
   "devDependencies": {
-    "@types/node": "^20",
+    "@types/node": "^22",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10",
