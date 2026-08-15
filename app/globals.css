@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -24,7 +22,7 @@ html {
 }
 
 body {
-  font-family: 'Outfit', sans-serif;
+  font-family: inherit;
   background: linear-gradient(135deg, var(--gradient-start) 0%, var(--gradient-mid) 50%, var(--gradient-end) 100%);
   min-height: 100vh;
   color: #e2e8f0;
@@ -147,6 +145,14 @@ body {
   box-shadow: 0 10px 40px rgba(0, 212, 255, 0.3);
 }
 
+.gradient-btn:focus-visible,
+.secondary-btn:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
+}
+
 .gradient-btn span {
   position: relative;
   z-index: 1;
@@ -182,7 +188,7 @@ body {
   color: white;
   width: 100%;
   transition: all 0.3s ease;
-  font-family: 'Space Mono', monospace;
+  font-family: inherit;
 }
 
 .modern-input::placeholder {
@@ -193,6 +199,11 @@ body {
   outline: none;
   border-color: var(--accent-cyan);
   box-shadow: 0 0 0 4px rgba(0, 212, 255, 0.1);
+}
+
+.modern-input:focus-visible {
+  outline: 2px solid var(--accent-cyan);
+  outline-offset: 3px;
 }
 
 /* Pulse animation for CTA */
@@ -357,6 +368,31 @@ body {
   .gradient-btn, .secondary-btn {
     padding: 12px 24px;
     font-size: 0.9rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .bg-mesh,
+  .particle,
+  .pulse-glow,
+  .fade-in-up,
+  .download-card,
+  .shimmer {
+    animation: none !important;
+  }
+
+  .fade-in-up {
+    opacity: 1;
+    transform: none;
+  }
+
+  .particles,
+  .particle {
+    display: none;
   }
 }
 

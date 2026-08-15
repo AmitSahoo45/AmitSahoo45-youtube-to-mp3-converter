@@ -11,9 +11,13 @@ interface DownloadSectionProps {
 
 const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, getNumber, embedded = false }) => {
     const filteredFormats = useMemo(() => {
-        const bestItags: Number[] = [134, 135, 136, 137]
-        return mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag)) || []
+        const bestItags = [134, 135, 136, 137]
+        return (mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag)) || [])
+            .slice()
+            .sort((a, b) => (b.itag ?? 0) - (a.itag ?? 0))
     }, [mp4Details])
+
+    const recommendedItag = filteredFormats[0]?.itag
 
     const thumbnail = useMemo(() => {
         if (!mp4Details) return null
@@ -62,35 +66,27 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
                 </div>
 
                 {/* Thumbnail */}
-                <div className="relative rounded-xl overflow-hidden mb-6 group">
+                <div className="relative rounded-xl overflow-hidden mb-6">
                     <div className="aspect-video relative">
                         <Image
                             src={thumbnail.url}
                             fill
                             alt={mp4Details.title}
-                            className="object-cover transition-transform duration-500 group-hover:scale-105"
+                            className="object-cover"
                         />
-                        {/* Overlay gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-
-                        {/* Play icon overlay */}
-                        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                            <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                                <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M8 5v14l11-7z" />
-                                </svg>
-                            </div>
-                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                     </div>
                 </div>
 
                 {/* Quality Options */}
                 <div className="space-y-3">
-                    <p className="text-sm text-gray-400 mb-4 text-center">Select your preferred quality:</p>
+                    <p className="text-sm text-slate-300 mb-4 text-center">Select your preferred quality:</p>
 
                     {filteredFormats.length > 0 ? (
                         <div className="grid gap-3">
-                            {filteredFormats.map((format, index) => (
+                            {filteredFormats.map((format) => {
+                                const isRecommended = format.itag === recommendedItag
+                                return (
                                 <a
                                     key={format.itag}
                                     href={format.url}
@@ -98,9 +94,9 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
                                     className="block"
                                     onClick={downloadFile}
                                 >
-                                    <div className={`glass-card-sm p-4 flex items-center justify-between transition-all hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer group ${index === 0 ? 'border-cyan-500/30 bg-cyan-500/5' : ''}`}>
+                                    <div className={`glass-card-sm p-4 flex items-center justify-between transition-all hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer group ${isRecommended ? 'border-cyan-500/30 bg-cyan-500/5' : ''}`}>
                                         <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${index === 0 ? 'bg-gradient-to-br from-cyan-500 to-blue-600' : 'bg-white/10'}`}>
+                                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isRecommended ? 'bg-gradient-to-br from-cyan-500 to-blue-600' : 'bg-white/10'}`}>
                                                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                                 </svg>
@@ -110,39 +106,33 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
                                                     <span className="font-semibold text-white">{format.qualityLabel}</span>
                                                     {getQualityIcon(format.qualityLabel)}
                                                 </div>
-                                                <span className="text-xs text-gray-500">MP4 Video</span>
+                                                <span className="text-xs text-slate-300">MP4 Video</span>
                                             </div>
                                         </div>
 
                                         <div className="flex items-center gap-2">
-                                            {index === 0 && (
-                                                <span className="hidden sm:inline-block text-xs text-cyan-400 font-medium">Recommended</span>
+                                            {isRecommended && (
+                                                <span className="hidden sm:inline-block text-xs text-cyan-400 font-medium">Highest quality</span>
                                             )}
                                             <div className="w-10 h-10 rounded-lg bg-white/10 flex items-center justify-center group-hover:bg-cyan-500 transition-colors">
-                                                <svg className="w-5 h-5 text-gray-400 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg className="w-5 h-5 text-slate-300 group-hover:text-white transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                                                 </svg>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
-                            ))}
+                            )})}
                         </div>
                     ) : (
                         <div className="text-center py-8">
-                            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-800 flex items-center justify-center">
-                                <svg className="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                            <p className="text-gray-500">No formats available for download.</p>
-                            <p className="text-sm text-gray-600 mt-1">This video may have download restrictions.</p>
+                            <p className="text-slate-300">No formats available for download.</p>
+                            <p className="text-sm text-slate-300 mt-1">This video may have download restrictions.</p>
                         </div>
                     )}
                 </div>
 
-                {/* Disclaimer */}
-                <p className="text-xs text-gray-600 text-center mt-6">
+                <p className="text-xs text-slate-300 text-center mt-6">
                     By downloading, you agree to use this content in accordance with YouTube&apos;s Terms of Service.
                 </p>
             </div>

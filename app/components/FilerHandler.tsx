@@ -19,6 +19,8 @@ const FilerHandler = () => {
     const [mp4Details, setMp4Details] = useState<MP4Type | null>(null)
     const [lastFormat, setLastFormat] = useState<ConvertFormat | null>(null)
     const resultsRef = useRef<HTMLDivElement>(null)
+    const converterRef = useRef<HTMLDivElement>(null)
+    const [converterInView, setConverterInView] = useState(true)
     const { executeRecaptcha } = useGoogleReCaptcha()
 
     const parsedVideoId = useMemo(() => (text.trim() ? getVideoId(text).id : null), [text])
@@ -133,6 +135,17 @@ const FilerHandler = () => {
     }, [])
 
     useEffect(() => {
+        const el = converterRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(
+            ([entry]) => setConverterInView(entry.isIntersecting),
+            { threshold: 0.2, rootMargin: '-80px 0px 0px 0px' }
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [])
+
+    useEffect(() => {
         if (!hasResult) return
         resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, [hasResult, downloadableFile, mp4Details])
@@ -157,14 +170,39 @@ const FilerHandler = () => {
                 ))}
             </div>
 
-            {/* Hero Section */}
-            <section className={`${hasResult ? 'pt-10 pb-8' : 'min-h-[90vh]'} flex flex-col items-center justify-center px-4 py-12`}>
+            {!converterInView && (
+                <div className="fixed top-16 left-0 right-0 z-30 border-b border-white/10 bg-[#0f0f1a]/90 backdrop-blur-md px-4 py-3">
+                    <div className="max-w-4xl mx-auto flex flex-col sm:flex-row gap-2">
+                        <label htmlFor="youtube-url-sticky" className="sr-only">YouTube URL</label>
+                        <input
+                            id="youtube-url-sticky"
+                            type="url"
+                            className="modern-input !py-2.5 !text-sm"
+                            placeholder="Paste YouTube URL here..."
+                            value={text}
+                            onChange={(e) => setText(e.target.value)}
+                            onKeyDown={handleKeyDown}
+                            disabled={isLoading}
+                            aria-invalid={urlState === 'invalid'}
+                        />
+                        <div className="flex gap-2 shrink-0">
+                            <button type="button" className="gradient-btn !py-2.5 !px-4" onClick={convertToMp4} disabled={isLoading}>
+                                MP4
+                            </button>
+                            <button type="button" className="secondary-btn !py-2.5 !px-4" onClick={convertToMp3} disabled={isLoading}>
+                                MP3
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <section className={`${hasResult ? 'pt-10 pb-8' : 'min-h-[80vh]'} flex flex-col items-center justify-center px-4 py-12`}>
                 <div className="text-center max-w-4xl mx-auto">
-                    {/* Logo/Brand */}
                     <div className="fade-in-up mb-6">
                         <div className="inline-flex items-center gap-3 glass-card-sm px-5 py-2.5 mb-8">
                             <div className="w-2.5 h-2.5 rounded-full bg-green-400 animate-pulse" />
-                            <span className="text-sm font-medium text-gray-300">Free • No Registration • Unlimited</span>
+                            <span className="text-sm font-medium text-slate-200">Free • No Registration • Unlimited</span>
                         </div>
                     </div>
 
@@ -173,17 +211,17 @@ const FilerHandler = () => {
                         <span className="gradient-text">MP3 & MP4</span>
                     </h1>
 
-                    <p className="fade-in-up delay-2 text-lg sm:text-xl text-gray-400 mb-10 max-w-2xl mx-auto leading-relaxed">
-                        The fastest, safest way to download your favorite YouTube videos.
-                        No ads, no malware, just pure quality downloads.
+                    <p className="fade-in-up delay-2 text-lg sm:text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+                        Download YouTube as MP3 or MP4. MP4 up to 1080p. No account required.
                     </p>
 
-                    {/* Main Converter Card */}
-                    <div className="fade-in-up delay-3 glass-card p-6 sm:p-8 md:p-10 max-w-2xl mx-auto">
-                        {/* Input Section */}
+                    <div id="converter" ref={converterRef} className="fade-in-up delay-3 glass-card p-6 sm:p-8 md:p-10 max-w-2xl mx-auto scroll-mt-24">
+                        <label htmlFor="youtube-url" className="block text-left text-sm font-medium text-slate-200 mb-2">
+                            YouTube URL
+                        </label>
                         <div className="relative mb-2">
                             <div className="absolute left-5 top-1/2 -translate-y-1/2 z-10">
-                                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
                             </div>
@@ -204,7 +242,7 @@ const FilerHandler = () => {
                                 {text && (
                                     <button
                                         type="button"
-                                        className="px-2 py-1 text-xs font-medium text-gray-400 hover:text-white rounded-md"
+                                        className="px-2 py-1 text-xs font-medium text-slate-300 hover:text-white rounded-md"
                                         onClick={() => setText('')}
                                         disabled={isLoading}
                                         aria-label="Clear URL"
@@ -281,19 +319,19 @@ const FilerHandler = () => {
                         </div>
 
                         {/* Format Info */}
-                        <div className="mt-6 flex flex-wrap justify-center gap-3 text-xs text-gray-400">
+                        <div className="mt-6 flex flex-wrap justify-center gap-3 text-xs text-slate-300">
                             <span className="quality-badge">1080p</span>
                             <span className="quality-badge">720p</span>
                             <span className="quality-badge">480p</span>
                             <span className="quality-badge">360p</span>
                         </div>
-                        <p className="mt-3 text-xs text-gray-500">MP4: 360p–1080p · MP3: audio</p>
+                        <p className="mt-3 text-xs text-slate-300">MP4: 360p–1080p · MP3: audio</p>
 
                         <div ref={resultsRef}>
                             {downloadableFile && (
                                 <div className="download-card mt-8 pt-6 border-t border-white/10 text-center">
                                     <h3 className="text-xl font-semibold mb-2">Your MP3 is Ready!</h3>
-                                    <p className="text-gray-400 mb-6 text-sm truncate max-w-full px-4">
+                                    <p className="text-slate-300 mb-6 text-sm truncate max-w-full px-4">
                                         {videoTitle}
                                     </p>
                                     <a href={downloadableFile} download>
@@ -325,7 +363,7 @@ const FilerHandler = () => {
                     </div>
 
                     {/* Trust Indicators */}
-                    <div className="fade-in-up delay-4 mt-10 flex flex-wrap justify-center gap-6 text-sm text-gray-500">
+                    <div className="fade-in-up delay-4 mt-10 flex flex-wrap justify-center gap-6 text-sm text-slate-300">
                         <div className="flex items-center gap-2">
                             <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -348,268 +386,66 @@ const FilerHandler = () => {
                 </div>
             </section>
 
-            {/* Features Section */}
-            <section className="px-4 py-16 sm:py-24">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center mb-12 sm:mb-16">
-                        <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                            Why Choose <span className="gradient-text">YtToMP3</span>?
-                        </h2>
-                        <p className="text-gray-400 max-w-2xl mx-auto">
-                            Built by developers, for everyone. Experience the difference with our premium converter.
-                        </p>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {/* Feature 1 */}
-                        <div className="feature-card glass-card-sm p-6 text-center">
-                            <div className="feature-icon w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-600/20 border border-green-500/30 flex items-center justify-center">
-                                <svg className="w-7 h-7 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-lg mb-2">100% Safe & Secure</h3>
-                            <p className="text-gray-400 text-sm">No malware, no phishing. Security is our top priority. Clean downloads guaranteed.</p>
-                        </div>
-
-                        {/* Feature 2 */}
-                        <div className="feature-card glass-card-sm p-6 text-center">
-                            <div className="feature-icon w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30 flex items-center justify-center">
-                                <svg className="w-7 h-7 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-lg mb-2">Lightning Fast</h3>
-                            <p className="text-gray-400 text-sm">Convert and download in seconds. Our optimized servers ensure rapid processing.</p>
-                        </div>
-
-                        {/* Feature 3 */}
-                        <div className="feature-card glass-card-sm p-6 text-center">
-                            <div className="feature-icon w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-violet-600/20 border border-purple-500/30 flex items-center justify-center">
-                                <svg className="w-7 h-7 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-lg mb-2">All Devices</h3>
-                            <p className="text-gray-400 text-sm">Works on desktop, tablet, and mobile. No app installation required.</p>
-                        </div>
-
-                        {/* Feature 4 */}
-                        <div className="feature-card glass-card-sm p-6 text-center">
-                            <div className="feature-icon w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-pink-500/20 to-rose-600/20 border border-pink-500/30 flex items-center justify-center">
-                                <svg className="w-7 h-7 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
-                            </div>
-                            <h3 className="font-semibold text-lg mb-2">Unlimited & Free</h3>
-                            <p className="text-gray-400 text-sm">No limits, no registration, completely free. Convert as many videos as you want.</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <div className="section-divider max-w-4xl mx-auto" />
-
-            {/* How to Use Section */}
-            <section className="px-4 py-16 sm:py-20">
+            <section id="how-to" className="px-4 py-16 sm:py-20 scroll-mt-24">
                 <div className="max-w-4xl mx-auto">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl sm:text-4xl font-bold mb-4">
                             How to <span className="gradient-text">Download</span>
                         </h2>
-                        <p className="text-gray-400">Three simple steps to get your favorite videos</p>
+                        <p className="text-slate-300">Three steps</p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {/* Step 1 */}
                         <div className="relative text-center">
                             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-xl font-bold">
                                 1
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Copy URL</h3>
-                            <p className="text-gray-400 text-sm">Find your video on YouTube and copy the URL from the address bar</p>
-                            {/* Connector line (hidden on mobile) */}
+                            <p className="text-slate-300 text-sm">Copy the YouTube video link</p>
                             <div className="hidden md:block absolute top-6 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-cyan-500/50 to-transparent" />
                         </div>
 
-                        {/* Step 2 */}
                         <div className="relative text-center">
                             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center text-xl font-bold">
                                 2
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Paste & Convert</h3>
-                            <p className="text-gray-400 text-sm">Paste the URL above and click the MP4 or MP3 button</p>
+                            <p className="text-slate-300 text-sm">Paste it above and choose MP4 or MP3</p>
                             <div className="hidden md:block absolute top-6 left-[60%] w-[80%] h-0.5 bg-gradient-to-r from-purple-500/50 to-transparent" />
                         </div>
 
-                        {/* Step 3 */}
                         <div className="text-center">
                             <div className="w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-xl font-bold">
                                 3
                             </div>
                             <h3 className="font-semibold text-lg mb-2">Download</h3>
-                            <p className="text-gray-400 text-sm">Choose your preferred quality and click download. That&apos;s it!</p>
+                            <p className="text-slate-300 text-sm">Pick a quality and save the file</p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <div className="section-divider max-w-4xl mx-auto" />
-
-            {/* SEO Content Section */}
-            <section className="px-4 py-16 sm:py-20">
-                <div className="max-w-4xl mx-auto">
-                    <article className="glass-card-sm p-6 sm:p-10">
-                        <h2 className="text-2xl sm:text-3xl font-bold mb-6 gradient-text">
-                            YouTube to MP3/MP4 Converter - Best Free Online Tool
-                        </h2>
-
-                        <div className="prose prose-invert prose-sm sm:prose-base max-w-none space-y-6 text-gray-300">
-                            <p>
-                                YouTube.com is the largest video sharing platform on the Internet. Every day millions of new videos are added.
-                                You can find all kinds of videos but YouTube does not offer a FREE downloading service for these videos.
-                            </p>
-
-                            <p>
-                                <strong className="text-white">YtToMP3</strong> allows you to download your favorite YouTube videos as MP3 (audio) or MP4 (video) files
-                                in the most efficient way. You are able to use YtToMP3 on any device – it is optimized to work on desktop,
-                                tablet and mobile devices. There is also no additional software or app needed.
-                            </p>
-
-                            <h3 className="text-xl font-semibold text-white mt-8 mb-4">How to download a YouTube video?</h3>
-
-                            <ol className="list-decimal list-inside space-y-3 ml-2">
-                                <li>Open YouTube.com and search for the video you would like to download.</li>
-                                <li>When you find the video, click on it and wait until it starts playing. Then, just copy the video URL from your browser address bar.</li>
-                                <li>Open YtToMP3 and paste the video URL in our converter. After that you will be able to choose the download format. You can choose between MP3 or MP4.</li>
-                                <li>Then, simply click on the Convert button. The conversion will be initiated, and may take a few minutes. We will try to convert the video in the best available quality.</li>
-                                <li>As soon as the conversion of the video is completed you will see a Download button. Just click on it, and the download shall start.</li>
-                            </ol>
-
-                            <div className="section-divider !my-8" />
-
-                            <h3 className="text-xl font-semibold text-white mb-4">YouTube to MP4 - High Quality Video Downloads</h3>
-                            <p>
-                                Convert YouTube to MP4 with high quality in 1080p, 2160p, 2K, 4K, 8K for free. Download YouTube video in MP4 format,
-                                no need to install software. Our online video converter does not require any installation on your PC,
-                                and you can convert videos in just 3 simple clicks!
-                            </p>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-8">
-                                <div className="glass-card-sm p-5">
-                                    <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                        </svg>
-                                        Features
-                                    </h4>
-                                    <ul className="space-y-2 text-sm text-gray-400">
-                                        <li>• Free Convert and download YouTube to MP4</li>
-                                        <li>• Unlimited Video Download from YouTube</li>
-                                        <li>• Simple and Fast YouTube to MP4 Converter</li>
-                                        <li>• Supports converter video YouTube to MP3 and other formats</li>
-                                    </ul>
-                                </div>
-
-                                <div className="glass-card-sm p-5">
-                                    <h4 className="font-semibold text-white mb-3 flex items-center gap-2">
-                                        <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                                            <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                                        </svg>
-                                        Instructions
-                                    </h4>
-                                    <ol className="space-y-2 text-sm text-gray-400 list-decimal list-inside">
-                                        <li>Copy URL of the YouTube video</li>
-                                        <li>Paste URL into the Search box and press Start</li>
-                                        <li>Choose the video format you want</li>
-                                        <li>Click Download button after conversion</li>
-                                    </ol>
-                                </div>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-            </section>
-
-            {/* FAQ / More Info */}
-            <section className="px-4 py-16 pb-24">
-                <div className="max-w-5xl mx-auto">
-                    <h2 className="text-2xl sm:text-3xl font-bold mb-10 text-center">
-                        What Makes Us <span className="gradient-text">Different</span>
+            <section id="faq" className="px-4 py-16 pb-24 scroll-mt-24">
+                <div className="max-w-3xl mx-auto">
+                    <h2 className="text-2xl sm:text-3xl font-bold mb-8 text-center">
+                        <span className="gradient-text">FAQ</span>
                     </h2>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                        <div className="glass-card-sm p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-white mb-2">100% Safe and Secure</h3>
-                                    <p className="text-sm text-gray-400">Security is our first priority. Our website provides safe and clean YouTube files with no malware or viruses.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="glass-card-sm p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-cyan-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-white mb-2">Easy and Quick Download</h3>
-                                    <p className="text-sm text-gray-400">Simple interface for fast downloads. Just copy, paste, and download. No registration accounts needed.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="glass-card-sm p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-white mb-2">Without Restriction</h3>
-                                    <p className="text-sm text-gray-400">Convert and download YouTube MP3 and MP4 as much as you want without limitation and always free of cost.</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className="glass-card-sm p-6">
-                            <div className="flex items-start gap-4">
-                                <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                                    <svg className="w-5 h-5 text-pink-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M3 5a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2h-2.22l.123.489.804.804A1 1 0 0113 18H7a1 1 0 01-.707-1.707l.804-.804L7.22 15H5a2 2 0 01-2-2V5zm5.771 7H5V5h10v7H8.771z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 className="font-semibold text-white mb-2">Full Platform Support</h3>
-                                    <p className="text-sm text-gray-400">Compatible with Windows, Mac, Linux, Android, and iPhone. Totally mobile-friendly website.</p>
-                                </div>
-                            </div>
-                        </div>
+                    <div className="space-y-4">
+                        <details className="glass-card-sm p-5 text-left">
+                            <summary className="font-semibold cursor-pointer">Is it free?</summary>
+                            <p className="mt-3 text-sm text-slate-300">Yes. No account is required.</p>
+                        </details>
+                        <details className="glass-card-sm p-5 text-left">
+                            <summary className="font-semibold cursor-pointer">What qualities are available?</summary>
+                            <p className="mt-3 text-sm text-slate-300">MP4: 360p, 480p, 720p, and 1080p when the video has those formats. MP3 is audio only.</p>
+                        </details>
+                        <details className="glass-card-sm p-5 text-left">
+                            <summary className="font-semibold cursor-pointer">Can I download any video?</summary>
+                            <p className="mt-3 text-sm text-slate-300">Only convert content you have the right to download. Follow YouTube&apos;s terms and copyright law.</p>
+                        </details>
                     </div>
                 </div>
             </section>
-
-            {/* Footer */}
-            <footer className="border-t border-white/5 py-8 px-4">
-                <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-center sm:text-left">
-                        <span className="font-bold gradient-text text-lg">YtToMP3/MP4</span>
-                        <p className="text-sm text-gray-500 mt-1">The safest YouTube converter, made by developers.</p>
-                    </div>
-                    <div className="text-sm text-gray-500">
-                        © {new Date().getFullYear()} YtToMP3. All rights reserved.
-                    </div>
-                </div>
-            </footer>
 
             <Toaster
                 position="top-center"

@@ -1,6 +1,15 @@
 import { Analytics } from '@vercel/analytics/react'
 import type { Metadata } from 'next'
+import { Outfit } from 'next/font/google'
+import SiteHeader from './components/SiteHeader'
+import SiteFooter from './components/SiteFooter'
 import './globals.css'
+
+const outfit = Outfit({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700', '800'],
+  display: 'swap',
+})
 
 export const metadata: Metadata = {
   title: 'YtToMP3/MP4: YouTube to MP3/MP4 Converter - Free HD Download',
@@ -83,12 +92,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      </head>
-      <body className="antialiased">
+      <body className={`${outfit.className} antialiased`}>
+        <SiteHeader />
         {children}
+        <SiteFooter />
         <Analytics />
       </body>
     </html>
