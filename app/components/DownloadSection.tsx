@@ -4,12 +4,12 @@ import { MP4Type } from '@/helper/types'
 
 interface DownloadSectionProps {
     mp4Details: MP4Type | null
-    downloadFile: (flag: boolean) => void
+    downloadFile: () => void
     getNumber: () => number
+    embedded?: boolean
 }
 
-// Replace lines 14-18 with:
-const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, getNumber }) => {
+const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, getNumber, embedded = false }) => {
     const filteredFormats = useMemo(() => {
         const bestItags: Number[] = [134, 135, 136, 137]
         return mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag)) || []
@@ -41,9 +41,13 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
         return null
     }
 
+    const shellClass = embedded
+        ? 'download-card mt-8 pt-6 border-t border-white/10'
+        : 'download-card glass-card max-w-2xl mx-auto p-6 sm:p-8'
+
     return (
-        <section className="px-4 pb-12">
-            <div className="download-card glass-card max-w-2xl mx-auto p-6 sm:p-8">
+        <section className={embedded ? '' : 'px-4 pb-12'}>
+            <div className={shellClass}>
                 {/* Header */}
                 <div className="text-center mb-6">
                     <div className="inline-flex items-center gap-2 glass-card-sm px-4 py-2 mb-4">
@@ -92,7 +96,7 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
                                     href={format.url}
                                     download
                                     className="block"
-                                    onClick={() => downloadFile(false)}
+                                    onClick={downloadFile}
                                 >
                                     <div className={`glass-card-sm p-4 flex items-center justify-between transition-all hover:border-cyan-500/30 hover:bg-white/5 cursor-pointer group ${index === 0 ? 'border-cyan-500/30 bg-cyan-500/5' : ''}`}>
                                         <div className="flex items-center gap-3">

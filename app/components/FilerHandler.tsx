@@ -1,12 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import axios from 'axios'
 import getVideoId from 'get-video-id'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { toast, Toaster } from 'react-hot-toast'
 import { MP4Type } from '@/helper/types'
 import DownloadSection from './DownloadSection'
+
+type ConvertFormat = 'mp3' | 'mp4'
 
 const FilerHandler = () => {
     const [text, setText] = useState('')
@@ -15,7 +17,13 @@ const FilerHandler = () => {
     const [isLoadingMp3, setIsLoadingMp3] = useState(false)
     const [isLoadingMp4, setIsLoadingMp4] = useState(false)
     const [mp4Details, setMp4Details] = useState<MP4Type | null>(null)
+    const [lastFormat, setLastFormat] = useState<ConvertFormat | null>(null)
+    const resultsRef = useRef<HTMLDivElement>(null)
     const { executeRecaptcha } = useGoogleReCaptcha()
+
+    const parsedVideoId = useMemo(() => (text.trim() ? getVideoId(text).id : null), [text])
+    const urlState = !text.trim() ? 'empty' : parsedVideoId ? 'valid' : 'invalid'
+    const hasResult = Boolean(downloadableFile || mp4Details)
 
     const convertToMp3 = async () => {
         if (text === '') return toast.error('Please enter a YouTube URL')
@@ -23,6 +31,8 @@ const FilerHandler = () => {
         const { id } = getVideoId(text)
         if (!id) return toast.error('Invalid YouTube URL')
 
+        setLastFormat('mp3')
+        setMp4Details(null)
         setIsLoadingMp3(true)
 
         if (!executeRecaptcha) {
@@ -55,6 +65,9 @@ const FilerHandler = () => {
         const { id } = getVideoId(text)
         if (!id) return toast.error('Invalid YouTube URL')
 
+        setLastFormat('mp4')
+        setDownloadableFile(null)
+        setVideoTitle('')
         setIsLoadingMp4(true)
 
         if (!executeRecaptcha) {
@@ -86,7 +99,7 @@ const FilerHandler = () => {
         return mp4Details.thumbnail.length - 2
     }
 
-    const downloadFile = (isMp3: boolean) => {
+    const downloadFile = () => {
         if (downloadableFile || mp4Details) {
             toast('Your download has started!', {
                 icon: '🎉',
@@ -96,12 +109,16 @@ const FilerHandler = () => {
                     border: '1px solid rgba(0, 212, 255, 0.3)',
                 }
             })
+        }
+    }
 
-            if (isMp3) {
-                setDownloadableFile(null)
-            } else {
-                setMp4Details(null)
-            }
+    const pasteFromClipboard = async () => {
+        try {
+            const clip = (await navigator.clipboard.readText()).trim()
+            if (!clip) return toast.error('Clipboard is empty')
+            setText(clip)
+        } catch {
+            toast.error('Could not read clipboard')
         }
     }
 
@@ -115,12 +132,19 @@ const FilerHandler = () => {
         fetchRegionDetails()
     }, [])
 
+    useEffect(() => {
+        if (!hasResult) return
+        resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+    }, [hasResult, downloadableFile, mp4Details])
+
     const isLoading = isLoadingMp3 || isLoadingMp4
 
-    const handleKeyPress = (e: React.KeyboardEvent) => {
-        if (e.key === 'Enter' && !isLoading) {
-            convertToMp4()
-        }
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key !== 'Enter' || isLoading) return
+        e.preventDefault()
+        if (lastFormat === 'mp3') convertToMp3()
+        else if (lastFormat === 'mp4') convertToMp4()
+        else toast('Choose MP3 or MP4')
     }
 
     return (
@@ -134,7 +158,7 @@ const FilerHandler = () => {
             </div>
 
             {/* Hero Section */}
-            <section className="min-h-[90vh] flex flex-col items-center justify-center px-4 py-12">
+            <section className={`${hasResult ? 'pt-10 pb-8' : 'min-h-[90vh]'} flex flex-col items-center justify-center px-4 py-12`}>
                 <div className="text-center max-w-4xl mx-auto">
                     {/* Logo/Brand */}
                     <div className="fade-in-up mb-6">
@@ -157,22 +181,50 @@ const FilerHandler = () => {
                     {/* Main Converter Card */}
                     <div className="fade-in-up delay-3 glass-card p-6 sm:p-8 md:p-10 max-w-2xl mx-auto">
                         {/* Input Section */}
-                        <div className="relative mb-6">
+                        <div className="relative mb-2">
                             <div className="absolute left-5 top-1/2 -translate-y-1/2 z-10">
-                                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
                             </div>
                             <input
-                                type="text"
-                                className="modern-input"
+                                id="youtube-url"
+                                type="url"
+                                className="modern-input !pr-28"
                                 placeholder="Paste YouTube URL here..."
                                 value={text}
                                 onChange={(e) => setText(e.target.value)}
-                                onKeyPress={handleKeyPress}
+                                onKeyDown={handleKeyDown}
                                 disabled={isLoading}
+                                aria-label="YouTube URL"
+                                aria-invalid={urlState === 'invalid'}
+                                aria-describedby="url-status"
                             />
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex items-center gap-1">
+                                {text && (
+                                    <button
+                                        type="button"
+                                        className="px-2 py-1 text-xs font-medium text-gray-400 hover:text-white rounded-md"
+                                        onClick={() => setText('')}
+                                        disabled={isLoading}
+                                        aria-label="Clear URL"
+                                    >
+                                        ✕
+                                    </button>
+                                )}
+                                <button
+                                    type="button"
+                                    className="px-2.5 py-1.5 text-xs font-semibold text-cyan-300 bg-white/5 border border-white/10 rounded-lg hover:bg-white/10 disabled:opacity-50"
+                                    onClick={pasteFromClipboard}
+                                    disabled={isLoading}
+                                >
+                                    Paste
+                                </button>
+                            </div>
                         </div>
+                        <p id="url-status" className={`mb-4 text-sm text-left min-h-[1.25rem] ${urlState === 'invalid' ? 'text-pink-400' : urlState === 'valid' ? 'text-green-400' : 'text-transparent'}`}>
+                            {urlState === 'invalid' ? 'Invalid YouTube URL' : urlState === 'valid' ? 'Valid YouTube URL' : '.'}
+                        </p>
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -229,11 +281,46 @@ const FilerHandler = () => {
                         </div>
 
                         {/* Format Info */}
-                        <div className="mt-6 flex flex-wrap justify-center gap-3 text-xs text-gray-500">
-                            <span className="quality-badge">4K / 2160p</span>
-                            <span className="quality-badge">1080p HD</span>
-                            <span className="quality-badge">720p HD</span>
-                            <span className="quality-badge">320kbps MP3</span>
+                        <div className="mt-6 flex flex-wrap justify-center gap-3 text-xs text-gray-400">
+                            <span className="quality-badge">1080p</span>
+                            <span className="quality-badge">720p</span>
+                            <span className="quality-badge">480p</span>
+                            <span className="quality-badge">360p</span>
+                        </div>
+                        <p className="mt-3 text-xs text-gray-500">MP4: 360p–1080p · MP3: audio</p>
+
+                        <div ref={resultsRef}>
+                            {downloadableFile && (
+                                <div className="download-card mt-8 pt-6 border-t border-white/10 text-center">
+                                    <h3 className="text-xl font-semibold mb-2">Your MP3 is Ready!</h3>
+                                    <p className="text-gray-400 mb-6 text-sm truncate max-w-full px-4">
+                                        {videoTitle}
+                                    </p>
+                                    <a href={downloadableFile} download>
+                                        <button
+                                            type="button"
+                                            className="gradient-btn w-full sm:w-auto"
+                                            onClick={downloadFile}
+                                        >
+                                            <span className="flex items-center justify-center gap-2">
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                                </svg>
+                                                Download MP3
+                                            </span>
+                                        </button>
+                                    </a>
+                                </div>
+                            )}
+
+                            {mp4Details && (
+                                <DownloadSection
+                                    mp4Details={mp4Details}
+                                    downloadFile={downloadFile}
+                                    getNumber={getNumber}
+                                    embedded
+                                />
+                            )}
                         </div>
                     </div>
 
@@ -260,44 +347,6 @@ const FilerHandler = () => {
                     </div>
                 </div>
             </section>
-
-            {/* Download Results */}
-            {downloadableFile && (
-                <section className="px-4 pb-12">
-                    <div className="download-card glass-card max-w-xl mx-auto p-6 sm:p-8 text-center">
-                        <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-cyan-500 to-purple-600 flex items-center justify-center">
-                            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
-                            </svg>
-                        </div>
-                        <h3 className="text-xl font-semibold mb-2">Your MP3 is Ready!</h3>
-                        <p className="text-gray-400 mb-6 text-sm truncate max-w-full px-4">
-                            {videoTitle}
-                        </p>
-                        <a href={downloadableFile} download>
-                            <button
-                                className="gradient-btn w-full sm:w-auto"
-                                onClick={() => downloadFile(true)}
-                            >
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                                    </svg>
-                                    Download MP3
-                                </span>
-                            </button>
-                        </a>
-                    </div>
-                </section>
-            )}
-
-            {mp4Details && (
-                <DownloadSection
-                    mp4Details={mp4Details}
-                    downloadFile={downloadFile}
-                    getNumber={getNumber}
-                />
-            )}
 
             {/* Features Section */}
             <section className="px-4 py-16 sm:py-24">
@@ -563,7 +612,7 @@ const FilerHandler = () => {
             </footer>
 
             <Toaster
-                position="bottom-center"
+                position="top-center"
                 toastOptions={{
                     duration: 3000,
                     style: {
