@@ -43,6 +43,11 @@ export default async function handler(
         if (score < 0.5)
             return res.status(400).json({ success: false, error: 'Get outta here' });
 
+        const internalSecret = process.env.BACKEND_INTERNAL_SECRET;
+
+        if (!internalSecret)
+            return res.status(500).json({ success: false, error: 'Internal server error' });
+
         let fetchVideoUrl;
 
         switch (type) {
@@ -56,7 +61,9 @@ export default async function handler(
             default:
                 return res.status(400).json({ success: false, error: 'Invalid type' });
         }
-        const { data } = await axios.post(fetchVideoUrl, { text });
+        const { data } = await axios.post(fetchVideoUrl, { text }, {
+            headers: { Authorization: `Bearer ${internalSecret}` },
+        });
 
         if (type === 'mp4')
             return res.status(200).json({
@@ -72,7 +79,8 @@ export default async function handler(
             title: data.title,
         });
     } catch (error) {
-        console.log('Error in /api/convert:', error);
-        return res.status(500).json({ success: false, error: error instanceof Error ? error.message : 'Internal server error' });
+        const status = axios.isAxiosError(error) ? error.response?.status : undefined;
+        console.error('Error in /api/convert', { status });
+        return res.status(500).json({ success: false, error: 'Internal server error' });
     }
 }
