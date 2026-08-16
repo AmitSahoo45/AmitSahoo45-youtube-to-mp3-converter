@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 
 import { Format, ThumbnailFormat } from '@/helper/types';
+import { isYouTubeId } from '@/helper/youtubeId';
 
 type Data = {
     success: boolean;
@@ -21,8 +22,11 @@ export default async function handler(
 
     const { token, text, type } = req.body;
 
-    if (!token || !text)
+    if (!token)
         return res.status(400).json({ success: false, error: 'Missing token or text' });
+
+    if (!isYouTubeId(text))
+        return res.status(400).json({ success: false, error: 'Invalid video id' });
 
     try {
         const secretKey = process.env.RECAPTCHA_SECRET_KEY;
