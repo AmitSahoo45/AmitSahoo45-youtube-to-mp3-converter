@@ -1,7 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import Image from 'next/image'
 import { MP4Type } from '@/helper/types'
-import { isAllowedThumbnailUrl, isAllowedVideoUrl } from '@/helper/safeUrl'
+import { isAllowedDownloadUrl, isAllowedThumbnailUrl } from '@/helper/safeUrl'
 
 interface DownloadSectionProps {
     mp4Details: MP4Type | null
@@ -13,7 +13,7 @@ interface DownloadSectionProps {
 const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, getNumber, embedded = false }) => {
     const filteredFormats = useMemo(() => {
         const bestItags = [134, 135, 136, 137]
-        return (mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag) && isAllowedVideoUrl(format.url)) || [])
+        return (mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag) && isAllowedDownloadUrl(format.url)) || [])
             .slice()
             .sort((a, b) => (b.itag ?? 0) - (a.itag ?? 0))
     }, [mp4Details])

@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 
 import { Format, ThumbnailFormat } from '@/helper/types';
-import { isAllowedDownloadUrl, isAllowedThumbnailUrl, isAllowedVideoUrl } from '@/helper/safeUrl';
+import { isAllowedDownloadUrl, isAllowedThumbnailUrl } from '@/helper/safeUrl';
 import { isYouTubeId } from '@/helper/youtubeId';
 
 type Data = {
@@ -68,6 +68,7 @@ export default async function handler(
         }
         const { data } = await axios.post(fetchVideoUrl, { text }, {
             headers: { Authorization: `Bearer ${internalSecret}` },
+            timeout: 120000,
         });
 
         if (type === 'mp4')
@@ -78,13 +79,13 @@ export default async function handler(
                     ? data.thumbnail.filter((item: ThumbnailFormat) => isAllowedThumbnailUrl(item?.url))
                     : data.thumbnail,
                 formats: Array.isArray(data.adaptiveFormats)
-                    ? data.adaptiveFormats.filter((item: Format) => isAllowedVideoUrl(item?.url))
+                    ? data.adaptiveFormats.filter((item: Format) => isAllowedDownloadUrl(item?.url))
                     : data.adaptiveFormats,
             })
 
         return res.status(200).json({
             success: true,
-            link: isAllowedDownloadUrl(data.link) ? data.link : undefined,
+            link: data.link,
             title: data.title,
         });
     } catch (error) {
