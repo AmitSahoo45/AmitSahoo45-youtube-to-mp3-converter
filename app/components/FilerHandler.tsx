@@ -6,6 +6,7 @@ import getVideoId from 'get-video-id'
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3'
 import { toast, Toaster } from 'react-hot-toast'
 import { MP4Type } from '@/helper/types'
+import { isAllowedDownloadUrl } from '@/helper/safeUrl'
 import DownloadSection from './DownloadSection'
 
 type ConvertFormat = 'mp3' | 'mp4'
@@ -48,14 +49,14 @@ const FilerHandler = () => {
             const response = await axios.post('/api/convert', { token, text: id, type: 'mp3' })
 
             if (response.data.success) {
-                setDownloadableFile(response.data.link)
+                setDownloadableFile(isAllowedDownloadUrl(response.data.link) ? response.data.link : null)
                 setVideoTitle(response.data.title)
                 toast.success('Audio ready for download!')
             } else {
                 throw new Error(response.data.error || 'Conversion failed')
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.error || error.message || 'Conversion failed')
+            toast.error(error.response?.data?.error || 'Conversion failed')
         } finally {
             setIsLoadingMp3(false)
         }
@@ -89,7 +90,7 @@ const FilerHandler = () => {
                 throw new Error(response.data.error || 'Conversion failed')
             }
         } catch (error: any) {
-            toast.error(error.response?.data?.error || error.message || 'Conversion failed')
+            toast.error(error.response?.data?.error || 'Conversion failed')
         } finally {
             setIsLoadingMp4(false)
         }
@@ -328,7 +329,7 @@ const FilerHandler = () => {
                         <p className="mt-3 text-xs text-slate-300">MP4: 360p–1080p · MP3: audio</p>
 
                         <div ref={resultsRef}>
-                            {downloadableFile && (
+                            {isAllowedDownloadUrl(downloadableFile) && (
                                 <div className="download-card mt-8 pt-6 border-t border-white/10 text-center">
                                     <h3 className="text-xl font-semibold mb-2">Your MP3 is Ready!</h3>
                                     <p className="text-slate-300 mb-6 text-sm truncate max-w-full px-4">

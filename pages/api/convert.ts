@@ -2,6 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import axios from 'axios';
 
 import { Format, ThumbnailFormat } from '@/helper/types';
+import { isAllowedDownloadUrl, isAllowedThumbnailUrl, isAllowedVideoUrl } from '@/helper/safeUrl';
 import { isYouTubeId } from '@/helper/youtubeId';
 
 type Data = {
@@ -73,18 +74,22 @@ export default async function handler(
             return res.status(200).json({
                 success: true,
                 title: data.title,
-                thumbnail: data.thumbnail,
-                formats: data.adaptiveFormats,
+                thumbnail: Array.isArray(data.thumbnail)
+                    ? data.thumbnail.filter((item: ThumbnailFormat) => isAllowedThumbnailUrl(item?.url))
+                    : data.thumbnail,
+                formats: Array.isArray(data.adaptiveFormats)
+                    ? data.adaptiveFormats.filter((item: Format) => isAllowedVideoUrl(item?.url))
+                    : data.adaptiveFormats,
             })
 
         return res.status(200).json({
             success: true,
-            link: data.link,
+            link: isAllowedDownloadUrl(data.link) ? data.link : undefined,
             title: data.title,
         });
     } catch (error) {
         const status = axios.isAxiosError(error) ? error.response?.status : undefined;
         console.error('Error in /api/convert', { status });
-        return res.status(500).json({ success: false, error: 'Internal server error' });
+        return res.status(500).json({ success: false, error: 'Conversion failed' });
     }
 }

@@ -1,6 +1,7 @@
 import React, { FC, useMemo } from 'react'
 import Image from 'next/image'
 import { MP4Type } from '@/helper/types'
+import { isAllowedThumbnailUrl, isAllowedVideoUrl } from '@/helper/safeUrl'
 
 interface DownloadSectionProps {
     mp4Details: MP4Type | null
@@ -12,7 +13,7 @@ interface DownloadSectionProps {
 const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, getNumber, embedded = false }) => {
     const filteredFormats = useMemo(() => {
         const bestItags = [134, 135, 136, 137]
-        return (mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag)) || [])
+        return (mp4Details?.formats.filter(format => format.itag && bestItags.includes(format.itag) && isAllowedVideoUrl(format.url)) || [])
             .slice()
             .sort((a, b) => (b.itag ?? 0) - (a.itag ?? 0))
     }, [mp4Details])
@@ -22,7 +23,9 @@ const DownloadSection: FC<DownloadSectionProps> = ({ mp4Details, downloadFile, g
     const thumbnail = useMemo(() => {
         if (!mp4Details) return null
         const index = getNumber()
-        return mp4Details.thumbnail[index] || mp4Details.thumbnail[0]
+        const preferred = mp4Details.thumbnail[index] || mp4Details.thumbnail[0]
+        if (preferred && isAllowedThumbnailUrl(preferred.url)) return preferred
+        return mp4Details.thumbnail.find(item => isAllowedThumbnailUrl(item.url)) || null
     }, [mp4Details, getNumber])
 
     if (!mp4Details || !thumbnail) return null
