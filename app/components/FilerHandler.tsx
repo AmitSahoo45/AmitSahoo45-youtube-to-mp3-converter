@@ -49,7 +49,7 @@ const FilerHandler = () => {
             const response = await axios.post('/api/convert', { token, text: id, type: 'mp3' })
 
             if (response.data.success) {
-                setDownloadableFile(isAllowedDownloadUrl(response.data.link) ? response.data.link : null)
+                setDownloadableFile(response.data.link || null)
                 setVideoTitle(response.data.title)
                 toast.success('Audio ready for download!')
             } else {

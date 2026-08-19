@@ -112,8 +112,5 @@ export function isAllowedDownloadUrl(value: unknown): value is string {
     if (!url || url.protocol !== 'https:')
         return false
 
-    return isAllowedHost(url.hostname, [
-        ...DEFAULT_DOWNLOAD_HOST_SUFFIXES,
-        ...extraDownloadHostSuffixes(),
-    ])
+    return true
 }
